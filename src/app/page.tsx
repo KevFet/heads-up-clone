@@ -44,11 +44,13 @@ export default function Home() {
 
   const t = {
     ready: { en: 'READY?', fr: 'PRÊT ?', 'es-MX': '¿LISTO?' },
+
     instructions: {
-      en: 'Place the phone on your forehead. Tilt DOWN for CORRECT, UP to PASS.',
-      fr: 'Placez le téléphone sur votre front. Penchez vers le BAS pour CORRECT, vers le HAUT pour PASSER.',
-      'es-MX': 'Coloca el teléfono en tu frente. Inclina hacia ABAJO si es CORRECTO, hacia ARRIBA para PASAR.'
+      en: 'Swipe RIGHT if correct, Swipe LEFT to pass.',
+      fr: 'Swippe à DROITE si correct, à GAUCHE pour passer.',
+      'es-MX': 'Desliza a la DERECHA si es correcto, a la IZQUIERDA para pasar.'
     },
+
     start: { en: 'START', fr: 'COMMENCER', 'es-MX': 'EMPEZAR' }
   };
 
