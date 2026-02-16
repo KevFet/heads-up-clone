@@ -34,20 +34,13 @@ export function useDeviceOrientation() {
         const { beta, gamma } = event;
         setOrientation({ beta, gamma });
 
-        // calibration: 
-        // In landscape, we care about how the phone rotates around its long axis.
-        // Usually 'beta' or 'gamma' depending on screen orientation.
-        // For "Heads Up", if the screen is on the forehead:
-        // Tilt Down (Forward) = Top of phone moves towards the ground.
-        // Tilt Up (Backward) = Top of phone moves towards the sky.
-
-        // We'll use a threshold of 45 degrees.
-        // Note: These values can be tricky depending on the browser/OS.
-        // Simplified logic: 
         if (beta !== null) {
-            if (beta > 60) setTilt('down');
-            else if (beta < -60) setTilt('up');
-            else setTilt('neutral');
+            // Assuming 90 is vertical (on forehead)
+            // Tilt Down (Forward) -> beta decreases towards 0
+            // Tilt Up (Backward) -> beta increases towards 180
+            if (beta < 40) setTilt('down');
+            else if (beta > 140) setTilt('up');
+            else if (beta > 70 && beta < 110) setTilt('neutral');
         }
     }, []);
 
