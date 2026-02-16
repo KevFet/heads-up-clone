@@ -2,7 +2,7 @@
 'use client';
 
 import { Theme, Language, ScoreEntry } from '@/types/game';
-import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
+import { useDeviceOrientation, TiltDirection } from '@/hooks/useDeviceOrientation';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Check, X, ShieldAlert } from 'lucide-react';
@@ -23,6 +23,9 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
     const [flash, setFlash] = useState<'correct' | 'pass' | null>(null);
 
     const items = useRef([...theme.items].sort(() => Math.random() - 0.5));
+
+    // THE FIX: "isArmed" ensures the phone must return to NEUTRAL before another action triggers.
+    const isArmed = useRef(false);
     const tiltLocked = useRef(false);
 
     useEffect(() => {
@@ -50,21 +53,27 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
     }, [started, timeLeft, score, onFinish]);
 
     const handleNext = useCallback((status: 'correct' | 'pass') => {
-        if (tiltLocked.current) return;
+        if (tiltLocked.current || !isArmed.current) return;
 
         setScore(prev => [...prev, { word: items.current[currentIndex].translations[lang], status }]);
         setFlash(status);
         tiltLocked.current = true;
+        isArmed.current = false; // Disarm until neutral again
 
         setTimeout(() => {
             setFlash(null);
             setCurrentIndex(prev => (prev + 1) % items.current.length);
             tiltLocked.current = false;
-        }, 800);
+        }, 1000);
     }, [currentIndex, lang]);
 
+    // Tilt detection trigger with Arming logic
     useEffect(() => {
-        if (started && !tiltLocked.current) {
+        if (!started) return;
+
+        if (tilt === 'neutral') {
+            isArmed.current = true;
+        } else if (isArmed.current && !tiltLocked.current) {
             if (tilt === 'down') {
                 handleNext('correct');
             } else if (tilt === 'up') {
@@ -100,9 +109,10 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
     }
 
     return (
-        <div className={`relative flex min-h-screen flex-col items-center justify-center overflow-hidden transition-colors duration-300 landscape-content-hidden ${flash === 'correct' ? 'bg-green-600' : flash === 'pass' ? 'bg-rose-600' : 'bg-slate-950'
+        <div className={`relative flex min-h-screen flex-col items-center justify-center overflow-hidden transition-colors duration-500 landscape-content-hidden ${flash === 'correct' ? 'bg-green-600' : flash === 'pass' ? 'bg-rose-600' : 'bg-slate-950'
             }`}>
-            <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+            {/* HUD */}
+            <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10 transition-opacity duration-300" style={{ opacity: flash ? 0 : 1 }}>
                 <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 backdrop-blur-md">
                     <Timer className="h-4 w-4 text-rose-400" />
                     <span className="text-lg font-mono font-black text-white">{timeLeft}s</span>
@@ -112,6 +122,7 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
                 </div>
             </div>
 
+            {/* Word Display */}
             <AnimatePresence mode="wait">
                 <motion.div
                     key={currentIndex}
@@ -121,22 +132,24 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
                     className="px-6 text-center"
                 >
                     <h1 className="text-5xl font-black uppercase tracking-tight text-white md:text-8xl">
-                        {items.current[currentIndex].translations[lang]}
+                        {flash === 'correct' ? 'CORRECT!' : flash === 'pass' ? 'PASS' : items.current[currentIndex].translations[lang]}
                     </h1>
                 </motion.div>
             </AnimatePresence>
 
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-6 text-slate-500 pointer-events-none">
-                <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-6 rounded-full bg-green-500/30" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Tilt Down = OK</span>
+            {/* Instructions */}
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-6 text-slate-500 pointer-events-none transition-opacity" style={{ opacity: flash ? 0 : 1 }}>
+                <div className="flex items-center gap-1.5 font-black uppercase tracking-widest text-[10px]">
+                    <div className="h-1.5 w-6 rounded-full bg-green-500" />
+                    <span className={isArmed.current ? 'text-slate-300' : 'text-slate-700'}>Tilting Down...</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-6 rounded-full bg-rose-500/30" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Tilt Up = Pass</span>
+                <div className="flex items-center gap-1.5 font-black uppercase tracking-widest text-[10px]">
+                    <div className="h-1.5 w-6 rounded-full bg-rose-500" />
+                    <span className={isArmed.current ? 'text-slate-300' : 'text-slate-700'}>Tilting Up...</span>
                 </div>
             </div>
 
+            {/* Visual feedback icons on flash */}
             <AnimatePresence>
                 {flash === 'correct' && (
                     <motion.div

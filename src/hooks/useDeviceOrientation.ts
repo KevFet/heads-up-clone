@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export type TiltDirection = 'neutral' | 'up' | 'down';
 
@@ -31,16 +31,30 @@ export function useDeviceOrientation() {
     };
 
     const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
-        const { beta, gamma } = event;
+        let { beta, gamma } = event;
         setOrientation({ beta, gamma });
 
-        if (beta !== null) {
-            // Assuming 90 is vertical (on forehead)
-            // Tilt Down (Forward) -> beta decreases towards 0
-            // Tilt Up (Backward) -> beta increases towards 180
-            if (beta < 40) setTilt('down');
-            else if (beta > 140) setTilt('up');
-            else if (beta > 70 && beta < 110) setTilt('neutral');
+        // Heads Up Logic for Landscape:
+        // When the phone is in landscape, "beta" and "gamma" can swap or behave differently.
+        // However, for most browsers, "beta" is the rotation around the X-axis (tilting forward/back).
+
+        if (beta !== null && gamma !== null) {
+            // Normalize beta for different landscape orientations if necessary
+            // But usually, beta < 45 is "Face Down", beta > 135 is "Face Up"
+            // Neutral is around 90.
+
+            const absBeta = Math.abs(beta);
+
+            // If we are in landscape, we might need to check gamma if the phone is held vertically.
+            // But usually beta is reliable for "tilt forward/back".
+
+            if (absBeta < 40) {
+                setTilt('down');
+            } else if (absBeta > 140) {
+                setTilt('up');
+            } else if (absBeta > 70 && absBeta < 110) {
+                setTilt('neutral');
+            }
         }
     }, []);
 
