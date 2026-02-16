@@ -13,10 +13,18 @@ const geistMono = Geist_Mono({
 });
 
 
+
 export const metadata: Metadata = {
   title: "Heads Up! Party Game",
   description: "A mobile-first party game clone for groups.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Heads Up!",
+  },
 };
+
 
 
 export default function RootLayout({

@@ -16,15 +16,29 @@ export default function Home() {
   const [language, setLanguage] = useState<Language>('en');
   const [lastScore, setLastScore] = useState<ScoreEntry[]>([]);
 
+
   const handleThemeSelect = (theme: Theme, lang: Language) => {
+    toggleFullScreen();
     setSelectedTheme(theme);
     setLanguage(lang);
     setGameState('INSTRUCTIONS');
   };
 
+
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((e) => {
+        console.error(`Error attempting to enable full-screen mode: ${e.message}`);
+      });
+    }
+  };
+
   const startPlaying = () => {
+    toggleFullScreen();
     setGameState('PLAYING');
   };
+
 
   const handleGameFinish = (score: ScoreEntry[]) => {
     setLastScore(score);
