@@ -1,0 +1,67 @@
+
+@import "tailwindcss";
+
+:root {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --primary: #f43f5e;
+  --secondary: #3b82f6;
+  --accent: #fbbf24;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes flash-green {
+  0% { background-color: transparent; }
+  50% { background-color: #22c55e; }
+  100% { background-color: transparent; }
+}
+
+@keyframes flash-red {
+  0% { background-color: transparent; }
+  50% { background-color: #ef4444; }
+  100% { background-color: transparent; }
+}
+
+.flash-correct {
+  animation: flash-green 0.5s ease-out;
+}
+
+.flash-pass {
+  animation: flash-red 0.5s ease-out;
+}
+
+/* Landscape restriction message */
+@media screen and (orientation: portrait) {
+  .portrait-only {
+    display: flex !important;
+  }
+  .landscape-content {
+    display: none !important;
+  }
+}
+
+@media screen and (orientation: landscape) {
+  .portrait-only {
+    display: none !important;
+  }
+  .landscape-content {
+    display: block !important;
+  }
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.card-gradient {
+  background: linear-gradient(45deg, rgba(244, 63, 94, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
