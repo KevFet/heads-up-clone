@@ -52,8 +52,9 @@ export default function Home() {
     start: { en: 'START', fr: 'COMMENCER', 'es-MX': 'EMPEZAR' }
   };
 
+
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 selection:bg-rose-500/30">
+    <main className="min-h-screen bg-slate-950 text-slate-50 selection:bg-rose-500/30 overflow-hidden">
       <LandscapeWarning />
 
       <AnimatePresence mode="wait">
@@ -63,6 +64,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="landscape-content-hidden h-full"
           >
             <ThemeSelector onSelect={handleThemeSelect} />
           </motion.div>
@@ -74,20 +76,20 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
-            className="flex min-h-screen flex-col items-center justify-center p-6 text-center landscape-content"
+            className="flex min-h-screen flex-col items-center justify-center p-4 text-center landscape-content-hidden overflow-y-auto"
           >
-            <div className="mb-6 rounded-full bg-rose-500/10 p-6">
-              <PartyPopper className="h-16 w-16 text-rose-500" />
+            <div className="mb-2 rounded-full bg-rose-500/10 p-3">
+              <PartyPopper className="h-8 w-8 text-rose-500" />
             </div>
-            <h2 className="mb-4 text-5xl font-black uppercase italic text-white md:text-7xl">
+            <h2 className="mb-2 text-3xl font-black uppercase italic text-white md:text-6xl">
               {t.ready[language]}
             </h2>
-            <p className="mb-10 max-w-2xl text-xl font-bold text-slate-400 md:text-2xl">
+            <p className="mb-6 max-w-2xl text-base font-bold text-slate-400 md:text-xl px-4">
               {t.instructions[language]}
             </p>
             <button
               onClick={startPlaying}
-              className="group relative flex items-center gap-4 rounded-full bg-rose-500 px-12 py-6 text-2xl font-black text-white shadow-2xl shadow-rose-500/40 transition-all hover:bg-rose-400 hover:scale-110 active:scale-95"
+              className="group relative flex items-center gap-3 rounded-full bg-rose-500 px-8 py-3 text-lg font-black text-white shadow-2xl shadow-rose-500/40 transition-all hover:bg-rose-400 hover:scale-110 active:scale-95"
             >
               {t.start[language]}
             </button>
@@ -100,7 +102,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50"
+            className="fixed inset-0 z-50 landscape-content-hidden"
           >
             <GameScreen
               theme={selectedTheme}
@@ -116,6 +118,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="landscape-content-hidden"
           >
             <ResultsScreen
               score={lastScore}
@@ -127,5 +130,6 @@ export default function Home() {
         )}
       </AnimatePresence>
     </main>
+
   );
 }
