@@ -2,10 +2,10 @@
 'use client';
 
 import { Theme, Language, ScoreEntry } from '@/types/game';
-import { useDeviceOrientation, TiltDirection } from '@/hooks/useDeviceOrientation';
+import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Check, X, ShieldAlert } from 'lucide-react';
+import { Timer, Check, X, ShieldAlert, Info } from 'lucide-react';
 
 interface Props {
     theme: Theme;
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function GameScreen({ theme, lang, onFinish }: Props) {
-    const { tilt, permission, requestPermission } = useDeviceOrientation();
+    const { tilt, orientation, permission, requestPermission } = useDeviceOrientation();
     const [started, setStarted] = useState(false);
     const [countdown, setCountdown] = useState(3);
     const [timeLeft, setTimeLeft] = useState(60);
@@ -23,8 +23,6 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
     const [flash, setFlash] = useState<'correct' | 'pass' | null>(null);
 
     const items = useRef([...theme.items].sort(() => Math.random() - 0.5));
-
-    // THE FIX: "isArmed" ensures the phone must return to NEUTRAL before another action triggers.
     const isArmed = useRef(false);
     const tiltLocked = useRef(false);
 
@@ -58,18 +56,20 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
         setScore(prev => [...prev, { word: items.current[currentIndex].translations[lang], status }]);
         setFlash(status);
         tiltLocked.current = true;
-        isArmed.current = false; // Disarm until neutral again
+        isArmed.current = false;
 
         setTimeout(() => {
             setFlash(null);
             setCurrentIndex(prev => (prev + 1) % items.current.length);
             tiltLocked.current = false;
-        }, 1000);
+        }, 800);
     }, [currentIndex, lang]);
 
-    // Tilt detection trigger with Arming logic
     useEffect(() => {
         if (!started) return;
+
+        // Debug log to console to help identify the issue if it still persists
+        // console.log('Tilt:', tilt, 'Beta:', orientation.beta, 'Armed:', isArmed.current);
 
         if (tilt === 'neutral') {
             isArmed.current = true;
@@ -80,7 +80,7 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
                 handleNext('pass');
             }
         }
-    }, [tilt, started, handleNext]);
+    }, [tilt, started, handleNext, orientation.beta]);
 
     if (permission === 'denied') {
         return (
@@ -113,11 +113,15 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
             }`}>
             {/* HUD */}
             <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10 transition-opacity duration-300" style={{ opacity: flash ? 0 : 1 }}>
-                <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 backdrop-blur-md">
+                <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 backdrop-blur-md border border-white/5">
                     <Timer className="h-4 w-4 text-rose-400" />
                     <span className="text-lg font-mono font-black text-white">{timeLeft}s</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 backdrop-blur-md">
+
+                {/* Visual indicator of "Armed" status for testing */}
+                <div className={`h-2 w-2 rounded-full ${isArmed.current ? 'bg-green-500' : 'bg-slate-700'} shadow-lg`} />
+
+                <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 backdrop-blur-md border border-white/5">
                     <span className="text-lg font-black text-white">SCORE: {score.filter(s => s.status === 'correct').length}</span>
                 </div>
             </div>
@@ -131,21 +135,29 @@ export default function GameScreen({ theme, lang, onFinish }: Props) {
                     exit={{ y: -20, opacity: 0 }}
                     className="px-6 text-center"
                 >
-                    <h1 className="text-5xl font-black uppercase tracking-tight text-white md:text-8xl">
+                    <h1 className="text-5xl font-black uppercase tracking-tight text-white md:text-8xl break-words max-w-[90vw]">
                         {flash === 'correct' ? 'CORRECT!' : flash === 'pass' ? 'PASS' : items.current[currentIndex].translations[lang]}
                     </h1>
                 </motion.div>
             </AnimatePresence>
 
-            {/* Instructions */}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-6 text-slate-500 pointer-events-none transition-opacity" style={{ opacity: flash ? 0 : 1 }}>
-                <div className="flex items-center gap-1.5 font-black uppercase tracking-widest text-[10px]">
-                    <div className="h-1.5 w-6 rounded-full bg-green-500" />
-                    <span className={isArmed.current ? 'text-slate-300' : 'text-slate-700'}>Tilting Down...</span>
-                </div>
-                <div className="flex items-center gap-1.5 font-black uppercase tracking-widest text-[10px]">
-                    <div className="h-1.5 w-6 rounded-full bg-rose-500" />
-                    <span className={isArmed.current ? 'text-slate-300' : 'text-slate-700'}>Tilting Up...</span>
+            {/* Tilt Status (Helpful for calibration) */}
+            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-2 text-slate-500 pointer-events-none transition-opacity" style={{ opacity: flash ? 0 : 0.6 }}>
+                {!isArmed.current && (
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-500/80 animate-pulse">
+                        <Info className="h-3 w-3" />
+                        <span>Bring to vertical for next card</span>
+                    </div>
+                )}
+                <div className="flex justify-center gap-6">
+                    <div className="flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px]">
+                        <div className={`h-1.5 w-6 rounded-full ${tilt === 'down' ? 'bg-green-500' : 'bg-green-500/20'}`} />
+                        <span>Down</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px]">
+                        <div className={`h-1.5 w-6 rounded-full ${tilt === 'up' ? 'bg-rose-500' : 'bg-rose-500/20'}`} />
+                        <span>Up</span>
+                    </div>
                 </div>
             </div>
 
