@@ -3,9 +3,10 @@
 
 import { Theme, Language } from '@/types/game';
 import { themes } from '@/data/themes';
-import { motion } from 'framer-motion';
-import { PartyPopper } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PartyPopper, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
+import RulesModal from './RulesModal';
 
 interface Props {
     onSelect: (theme: Theme, lang: Language) => void;
@@ -13,6 +14,7 @@ interface Props {
 
 export default function ThemeSelector({ onSelect }: Props) {
     const [lang, setLang] = useState<Language>('en');
+    const [showRules, setShowRules] = useState(false);
 
     const languages: { code: Language; label: string; flag: string }[] = [
         { code: 'en', label: 'English', flag: '🇺🇸' },
@@ -22,26 +24,41 @@ export default function ThemeSelector({ onSelect }: Props) {
 
     return (
         <div className="flex h-screen flex-col items-center bg-slate-950 p-4 landscape-content-hidden overflow-hidden">
+            <AnimatePresence>
+                {showRules && (
+                    <RulesModal lang={lang} onClose={() => setShowRules(false)} />
+                )}
+            </AnimatePresence>
+
             <div className="mb-4 flex w-full max-w-4xl flex-wrap items-center justify-between gap-2 shrink-0">
                 <div className="flex items-center gap-2">
                     <PartyPopper className="h-6 w-6 text-rose-500" />
                     <h1 className="text-xl font-black tracking-tighter text-white">HEADS UP</h1>
                 </div>
 
-                <div className="flex gap-1 rounded-full bg-slate-900/50 p-1 backdrop-blur-md">
-                    {languages.map((l) => (
-                        <button
-                            key={l.code}
-                            onClick={() => setLang(l.code)}
-                            className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold transition-all ${lang === l.code
-                                    ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
-                                    : 'text-slate-400 hover:text-white'
-                                }`}
-                        >
-                            <span>{l.flag}</span>
-                            <span className="hidden sm:inline">{l.label}</span>
-                        </button>
-                    ))}
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowRules(true)}
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 border border-white/10 text-slate-400 hover:text-white hover:border-rose-500/50 transition-all"
+                    >
+                        <HelpCircle className="h-5 w-5" />
+                    </button>
+
+                    <div className="flex gap-1 rounded-full bg-slate-900/50 p-1 backdrop-blur-md">
+                        {languages.map((l) => (
+                            <button
+                                key={l.code}
+                                onClick={() => setLang(l.code)}
+                                className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold transition-all ${lang === l.code
+                                        ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
+                                        : 'text-slate-400 hover:text-white'
+                                    }`}
+                            >
+                                <span>{l.flag}</span>
+                                <span className="hidden sm:inline">{l.label}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
